@@ -1,0 +1,71 @@
+import tkinter as tk
+from tkinter import ttk
+import numpy as np
+import sounddevice as sd
+
+#Aegean_E
+
+def generate_stereo_sine_wave(left_frequency, right_frequency, duration_ms, left_volume, right_volume):
+    sample_rate = 44100  # CD quality
+    t = np.linspace(0, duration_ms / 1000, int(sample_rate * (duration_ms / 1000)), endpoint=False)
+
+    left_wave = left_volume * np.sin(2 * np.pi * left_frequency * t)
+    right_wave = right_volume * np.sin(2 * np.pi * right_frequency * t)
+
+    return left_wave, right_wave
+
+
+def update_sine_wave():
+    left_frequency = float(left_frequency_entry.get())
+    right_frequency = float(right_frequency_entry.get())
+    left_volume = float(left_volume_entry.get()) / 100
+    right_volume = float(right_volume_entry.get()) / 100
+
+    duration = 1000  # Duration in milliseconds
+    left_wave, right_wave = generate_stereo_sine_wave(left_frequency, right_frequency, duration, left_volume,
+                                                      right_volume)
+
+    loop_duration = 10000  # Duration of the loop in milliseconds
+    loop_audio_data = np.column_stack((left_wave, right_wave))
+    looped_audio_data = np.tile(loop_audio_data, (int(loop_duration / duration), 1))
+
+    sd.play(looped_audio_data, samplerate=44100)
+
+
+root = tk.Tk()
+root.title("Stereo Sine Wave Generator")
+
+left_frequency_frame = ttk.LabelFrame(root, text="Left Ear Frequency (Hz)")
+left_frequency_frame.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
+
+left_frequency_label = ttk.Label(left_frequency_frame, text="Frequency:")
+left_frequency_label.grid(row=0, column=0, padx=10, pady=10)
+left_frequency_entry = ttk.Entry(left_frequency_frame)
+left_frequency_entry.grid(row=0, column=1, padx=10, pady=10)
+left_frequency_entry.insert(0, "440")  # Default frequency of 440 Hz
+
+left_volume_label = ttk.Label(left_frequency_frame, text="Volume (%):")
+left_volume_label.grid(row=1, column=0, padx=10, pady=10)
+left_volume_entry = ttk.Entry(left_frequency_frame)
+left_volume_entry.grid(row=1, column=1, padx=10, pady=10)
+left_volume_entry.insert(0, "50")  # Default volume of 50%
+
+right_frequency_frame = ttk.LabelFrame(root, text="Right Ear Frequency (Hz)")
+right_frequency_frame.grid(row=0, column=1, padx=10, pady=10, sticky="nsew")
+
+right_frequency_label = ttk.Label(right_frequency_frame, text="Frequency:")
+right_frequency_label.grid(row=0, column=0, padx=10, pady=10)
+right_frequency_entry = ttk.Entry(right_frequency_frame)
+right_frequency_entry.grid(row=0, column=1, padx=10, pady=10)
+right_frequency_entry.insert(0, "440")  # Default frequency of 440 Hz
+
+right_volume_label = ttk.Label(right_frequency_frame, text="Volume (%):")
+right_volume_label.grid(row=1, column=0, padx=10, pady=10)
+right_volume_entry = ttk.Entry(right_frequency_frame)
+right_volume_entry.grid(row=1, column=1, padx=10, pady=10)
+right_volume_entry.insert(0, "50")  # Default volume of 50%
+
+generate_button = ttk.Button(root, text="Generate Sine Wave", command=update_sine_wave)
+generate_button.grid(row=1, column=0, columnspan=2, pady=10)
+
+root.mainloop()
