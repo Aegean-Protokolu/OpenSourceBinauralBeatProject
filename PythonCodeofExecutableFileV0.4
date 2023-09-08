@@ -2,28 +2,39 @@ import tkinter as tk
 from tkinter import ttk
 import numpy as np
 import sounddevice as sd
+from scipy import signal
 
-#Aegean_E
+# Aegean_E
 
-def generate_stereo_sine_wave(left_frequency, right_frequency, duration_ms, left_volume, right_volume):
+is_playing = False
+
+waveforms = {
+    "Sine": np.sin,
+    "Square": signal.square,
+    "Sawtooth": signal.sawtooth,
+}
+
+def generate_stereo_wave(left_frequency, right_frequency, duration_ms, left_volume, right_volume, left_waveform, right_waveform):
     sample_rate = 44100  # CD quality
     t = np.linspace(0, duration_ms / 1000, int(sample_rate * (duration_ms / 1000)), endpoint=False)
 
-    left_wave = left_volume * np.sin(2 * np.pi * left_frequency * t)
-    right_wave = right_volume * np.sin(2 * np.pi * right_frequency * t)
+    left_wave = left_volume * waveforms[left_waveform](2 * np.pi * left_frequency * t)
+    right_wave = right_volume * waveforms[right_waveform](2 * np.pi * right_frequency * t)
 
     return left_wave, right_wave
 
-
-def update_sine_wave():
+def play_audio():
+    global is_playing
     left_frequency = float(left_frequency_entry.get())
     right_frequency = float(right_frequency_entry.get())
     left_volume = float(left_volume_entry.get()) / 100
     right_volume = float(right_volume_entry.get()) / 100
+    left_waveform = left_waveform_var.get()
+    right_waveform = right_waveform_var.get()
 
     duration = 1000  # Duration in milliseconds
-    left_wave, right_wave = generate_stereo_sine_wave(left_frequency, right_frequency, duration, left_volume,
-                                                      right_volume)
+    left_wave, right_wave = generate_stereo_wave(left_frequency, right_frequency, duration, left_volume,
+                                                      right_volume, left_waveform, right_waveform)
 
     loop_duration = 10000  # Duration of the loop in milliseconds
     loop_audio_data = np.column_stack((left_wave, right_wave))
@@ -31,9 +42,16 @@ def update_sine_wave():
 
     sd.play(looped_audio_data, samplerate=44100)
 
+    is_playing = True
+
+def stop_audio():
+    global is_playing
+    if is_playing:
+        sd.stop()
+        is_playing = False
 
 root = tk.Tk()
-root.title("Stereo Sine Wave Generator")
+root.title("Binaural Beat Generator by Aegean")
 
 left_frequency_frame = ttk.LabelFrame(root, text="Left Ear Frequency (Hz)")
 left_frequency_frame.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
@@ -50,6 +68,13 @@ left_volume_entry = ttk.Entry(left_frequency_frame)
 left_volume_entry.grid(row=1, column=1, padx=10, pady=10)
 left_volume_entry.insert(0, "50")  # Default volume of 50%
 
+left_waveform_label = ttk.Label(left_frequency_frame, text="Waveform:")
+left_waveform_label.grid(row=2, column=0, padx=10, pady=10)
+left_waveform_var = tk.StringVar()
+left_waveform_combobox = ttk.Combobox(left_frequency_frame, textvariable=left_waveform_var, values=list(waveforms.keys()))
+left_waveform_combobox.grid(row=2, column=1, padx=10, pady=10)
+left_waveform_combobox.set("Sine")  # Default waveform is Sine
+
 right_frequency_frame = ttk.LabelFrame(root, text="Right Ear Frequency (Hz)")
 right_frequency_frame.grid(row=0, column=1, padx=10, pady=10, sticky="nsew")
 
@@ -65,7 +90,17 @@ right_volume_entry = ttk.Entry(right_frequency_frame)
 right_volume_entry.grid(row=1, column=1, padx=10, pady=10)
 right_volume_entry.insert(0, "50")  # Default volume of 50%
 
-generate_button = ttk.Button(root, text="Generate Sine Wave", command=update_sine_wave)
-generate_button.grid(row=1, column=0, columnspan=2, pady=10)
+right_waveform_label = ttk.Label(right_frequency_frame, text="Waveform:")
+right_waveform_label.grid(row=2, column=0, padx=10, pady=10)
+right_waveform_var = tk.StringVar()
+right_waveform_combobox = ttk.Combobox(right_frequency_frame, textvariable=right_waveform_var, values=list(waveforms.keys()))
+right_waveform_combobox.grid(row=2, column=1, padx=10, pady=10)
+right_waveform_combobox.set("Sine")  # Default waveform is Sine
+
+generate_button = ttk.Button(root, text="Generate Waveform", command=play_audio)
+generate_button.grid(row=1, column=0, pady=10)
+
+stop_button = ttk.Button(root, text="Stop", command=stop_audio)
+stop_button.grid(row=1, column=1, pady=10)
 
 root.mainloop()
