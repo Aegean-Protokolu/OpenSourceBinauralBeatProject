@@ -3,6 +3,7 @@ from tkinter import ttk
 import numpy as np
 import sounddevice as sd
 from scipy import signal
+from tkinter import messagebox
 
 # Aegean_E
 
@@ -15,7 +16,7 @@ waveforms = {
 }
 
 def generate_stereo_wave(left_frequency, right_frequency, duration_ms, left_volume, right_volume, left_waveform, right_waveform):
-    sample_rate = 44100  # CD quality
+    sample_rate = 44100
     t = np.linspace(0, duration_ms / 1000, int(sample_rate * (duration_ms / 1000)), endpoint=False)
 
     left_wave = left_volume * waveforms[left_waveform](2 * np.pi * left_frequency * t)
@@ -36,11 +37,8 @@ def play_audio():
     left_wave, right_wave = generate_stereo_wave(left_frequency, right_frequency, duration, left_volume,
                                                       right_volume, left_waveform, right_waveform)
 
-    loop_duration = 10000  # Duration of the loop in milliseconds
     loop_audio_data = np.column_stack((left_wave, right_wave))
-    looped_audio_data = np.tile(loop_audio_data, (int(loop_duration / duration), 1))
-
-    sd.play(looped_audio_data, samplerate=44100)
+    sd.play(loop_audio_data, samplerate=44100, loop=True)
 
     is_playing = True
 
@@ -50,8 +48,30 @@ def stop_audio():
         sd.stop()
         is_playing = False
 
+
+def show_about():
+    about_text = """
+This project is completely free for personal uses. For commercial purposes reach out to me via my social media accounts. I appreciate any donations made on Patreon.
+
+Social Media Accounts:
+
+Twitter: twitter.com/@Aegean_E
+Youtube: youtube.com/@Aegean_E
+Patreon: patreon.com/Aegean_E
+
+Ægean - 2023
+    """
+    messagebox.showinfo("About", about_text)
+
 root = tk.Tk()
 root.title("Binaural Beat Generator by Aegean")
+
+menu_bar = tk.Menu(root)
+root.config(menu=menu_bar)
+
+about_menu = tk.Menu(menu_bar, tearoff=False)
+menu_bar.add_cascade(label="Settings", menu=about_menu)
+about_menu.add_command(label="About", command=show_about)
 
 left_frequency_frame = ttk.LabelFrame(root, text="Left Ear Frequency (Hz)")
 left_frequency_frame.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
@@ -60,20 +80,20 @@ left_frequency_label = ttk.Label(left_frequency_frame, text="Frequency:")
 left_frequency_label.grid(row=0, column=0, padx=10, pady=10)
 left_frequency_entry = ttk.Entry(left_frequency_frame)
 left_frequency_entry.grid(row=0, column=1, padx=10, pady=10)
-left_frequency_entry.insert(0, "440")  # Default frequency of 440 Hz
+left_frequency_entry.insert(0, "432")
 
 left_volume_label = ttk.Label(left_frequency_frame, text="Volume (%):")
 left_volume_label.grid(row=1, column=0, padx=10, pady=10)
 left_volume_entry = ttk.Entry(left_frequency_frame)
 left_volume_entry.grid(row=1, column=1, padx=10, pady=10)
-left_volume_entry.insert(0, "50")  # Default volume of 50%
+left_volume_entry.insert(0, "50")
 
 left_waveform_label = ttk.Label(left_frequency_frame, text="Waveform:")
 left_waveform_label.grid(row=2, column=0, padx=10, pady=10)
 left_waveform_var = tk.StringVar()
 left_waveform_combobox = ttk.Combobox(left_frequency_frame, textvariable=left_waveform_var, values=list(waveforms.keys()))
 left_waveform_combobox.grid(row=2, column=1, padx=10, pady=10)
-left_waveform_combobox.set("Sine")  # Default waveform is Sine
+left_waveform_combobox.set("Sine")
 
 right_frequency_frame = ttk.LabelFrame(root, text="Right Ear Frequency (Hz)")
 right_frequency_frame.grid(row=0, column=1, padx=10, pady=10, sticky="nsew")
@@ -82,22 +102,103 @@ right_frequency_label = ttk.Label(right_frequency_frame, text="Frequency:")
 right_frequency_label.grid(row=0, column=0, padx=10, pady=10)
 right_frequency_entry = ttk.Entry(right_frequency_frame)
 right_frequency_entry.grid(row=0, column=1, padx=10, pady=10)
-right_frequency_entry.insert(0, "440")  # Default frequency of 440 Hz
+right_frequency_entry.insert(0, "432")
 
 right_volume_label = ttk.Label(right_frequency_frame, text="Volume (%):")
 right_volume_label.grid(row=1, column=0, padx=10, pady=10)
 right_volume_entry = ttk.Entry(right_frequency_frame)
 right_volume_entry.grid(row=1, column=1, padx=10, pady=10)
-right_volume_entry.insert(0, "50")  # Default volume of 50%
+right_volume_entry.insert(0, "50")
 
 right_waveform_label = ttk.Label(right_frequency_frame, text="Waveform:")
 right_waveform_label.grid(row=2, column=0, padx=10, pady=10)
 right_waveform_var = tk.StringVar()
 right_waveform_combobox = ttk.Combobox(right_frequency_frame, textvariable=right_waveform_var, values=list(waveforms.keys()))
 right_waveform_combobox.grid(row=2, column=1, padx=10, pady=10)
-right_waveform_combobox.set("Sine")  # Default waveform is Sine
+right_waveform_combobox.set("Sine")
 
-generate_button = ttk.Button(root, text="Generate Waveform", command=play_audio)
+def preset_6_hz_binaural_beat_528():
+    right_frequency_entry.delete(0, tk.END)
+    left_frequency_entry.delete(0, tk.END)
+    right_frequency_entry.insert(0, "531")
+    left_frequency_entry.insert(0, "525")
+
+def preset_6_hz_binaural_beat_432():
+    right_frequency_entry.delete(0, tk.END)
+    left_frequency_entry.delete(0, tk.END)
+    right_frequency_entry.insert(0, "435")
+    left_frequency_entry.insert(0, "429")
+
+def preset_16_hz_binaural_beat_528():
+    right_frequency_entry.delete(0, tk.END)
+    left_frequency_entry.delete(0, tk.END)
+    right_frequency_entry.insert(0, "536")
+    left_frequency_entry.insert(0, "520")
+
+def preset_16_hz_binaural_beat_432():
+    right_frequency_entry.delete(0, tk.END)
+    left_frequency_entry.delete(0, tk.END)
+    right_frequency_entry.insert(0, "440")
+    left_frequency_entry.insert(0, "424")
+
+def preset_40_hz_binaural_beat_528():
+    right_frequency_entry.delete(0, tk.END)
+    left_frequency_entry.delete(0, tk.END)
+    right_frequency_entry.insert(0, "548")
+    left_frequency_entry.insert(0, "508")
+
+def preset_40_hz_binaural_beat_438():
+    right_frequency_entry.delete(0, tk.END)
+    left_frequency_entry.delete(0, tk.END)
+    right_frequency_entry.insert(0, "458")
+    left_frequency_entry.insert(0, "418")
+
+def preset_528_hz_monaural_beat():
+    right_frequency_entry.delete(0, tk.END)
+    left_frequency_entry.delete(0, tk.END)
+    right_frequency_entry.insert(0, "528")
+    left_frequency_entry.insert(0, "528")
+
+def preset_432_hz_monaural_beat():
+    right_frequency_entry.delete(0, tk.END)
+    left_frequency_entry.delete(0, tk.END)
+    right_frequency_entry.insert(0, "432")
+    left_frequency_entry.insert(0, "432")
+
+presets_frame = ttk.LabelFrame(root, text="Presets")
+presets_frame.grid(row=0, column=2, padx=10, pady=10, sticky="nsew")
+
+monaural_beats_frame = ttk.LabelFrame(presets_frame, text="Monaural Beats")
+monaural_beats_frame.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
+
+preset_button_7 = ttk.Button(monaural_beats_frame, text="528 Hz Monaural Beat", command=preset_528_hz_monaural_beat)
+preset_button_7.grid(row=0, column=0, padx=10, pady=10)
+
+preset_button_8 = ttk.Button(monaural_beats_frame, text="432 Hz Monaural Beat", command=preset_432_hz_monaural_beat)
+preset_button_8.grid(row=1, column=0, padx=10, pady=10)
+
+binaural_beats_frame = ttk.LabelFrame(presets_frame, text="Binaural Beats")
+binaural_beats_frame.grid(row=0, column=1, padx=10, pady=10, sticky="nsew")
+
+preset_button_1 = ttk.Button(binaural_beats_frame, text="6 Hz Binaural Beat, 528 Hz Carrier Frequency", command=preset_6_hz_binaural_beat_528)
+preset_button_1.grid(row=0, column=0, padx=10, pady=10)
+
+preset_button_2 = ttk.Button(binaural_beats_frame, text="6 Hz Binaural Beat, 432 Hz Carrier Frequency", command=preset_6_hz_binaural_beat_432)
+preset_button_2.grid(row=1, column=0, padx=10, pady=10)
+
+preset_button_3 = ttk.Button(binaural_beats_frame, text="16 Hz Binaural Beat, 528 Hz Carrier Frequency", command=preset_16_hz_binaural_beat_528)
+preset_button_3.grid(row=2, column=0, padx=10, pady=10)
+
+preset_button_4 = ttk.Button(binaural_beats_frame, text="16 Hz Binaural Beat, 432 Hz Carrier Frequency", command=preset_16_hz_binaural_beat_432)
+preset_button_4.grid(row=3, column=0, padx=10, pady=10)
+
+preset_button_5 = ttk.Button(binaural_beats_frame, text="40 Hz Binaural Beat, 528 Hz Carrier Frequency", command=preset_40_hz_binaural_beat_528)
+preset_button_5.grid(row=4, column=0, padx=10, pady=10)
+
+preset_button_6 = ttk.Button(binaural_beats_frame, text="40 Hz Binaural Beat, 438 Hz Carrier Frequency", command=preset_40_hz_binaural_beat_438)
+preset_button_6.grid(row=5, column=0, padx=10, pady=10)
+
+generate_button = ttk.Button(root, text="Generate Beat", command=play_audio)
 generate_button.grid(row=1, column=0, pady=10)
 
 stop_button = ttk.Button(root, text="Stop", command=stop_audio)
